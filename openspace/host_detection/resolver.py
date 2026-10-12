@@ -64,14 +64,18 @@ def _load_env_once() -> None:
         return
 
     try:
-        from dotenv import load_dotenv
+        from dotenv import find_dotenv, load_dotenv
     except ImportError:
         return
 
     pkg_env = Path(__file__).resolve().parent.parent / ".env"
     if pkg_env.is_file():
         load_dotenv(pkg_env)
-    load_dotenv()
+    # Without usecwd, find_dotenv() searches upward from this module whenever
+    # __main__ has a __file__ (every console script), so CWD/.env never loads.
+    cwd_env = find_dotenv(usecwd=True)
+    if cwd_env:
+        load_dotenv(cwd_env)
 
 
 def load_runtime_env() -> None:
